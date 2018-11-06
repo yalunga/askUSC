@@ -16,6 +16,9 @@ CREATE TABLE User (
     instructorType VARCHAR(100) NULL
 );
 
+INSERT INTO User (userID, idToken, fullName, lastName, firstName, email, userType, instructorID)
+VALUES ("millerID", "millerToken", "Jeff Miller", "Miller", "Jeff", "miller@usc.edu", "instructor", "Miller");
+
 CREATE TABLE Class (
 	classID VARCHAR(100) PRIMARY KEY,
     department VARCHAR(100),
@@ -25,6 +28,9 @@ CREATE TABLE Class (
     lectureIDs VARCHAR(100),
     FOREIGN KEY (instructorID) REFERENCES User(instructorID)
 );
+
+INSERT INTO Class (classID, department, classNumber, instructorID, classDescription, lectureIDs)
+VALUES ("CSCI201", "CSCI", "201", "Miller", "Principles of Software Development", "1");
 
 CREATE TABLE Lecture (
 	lectureUUID VARCHAR(100) UNIQUE,
@@ -37,10 +43,13 @@ CREATE TABLE Lecture (
     FOREIGN KEY (classID) REFERENCES Class(classID)
 );
 
+INSERT INTO Lecture (lectureUUID, sectionID, classID, startTime, endTime, meetingDaysOfWeek, lectureDescription)
+VALUES("ABCD", "8AM", "CSCI201", "08:00:00", "09:20:00", "TTh", "Principles of Software Development");
+
 CREATE TABLE LectureRegistration (
-	studentID VARCHAR(100),
+	userID VARCHAR(100),
     lectureUUID VARCHAR(100),
-    FOREIGN KEY (studentID) REFERENCES User(studentId),
+    FOREIGN KEY (userID) REFERENCES User(userID),
     FOREIGN KEY (lectureUUID) REFERENCES Lecture(lectureUUID)
 );
 

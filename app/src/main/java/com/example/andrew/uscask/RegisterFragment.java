@@ -7,6 +7,19 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -22,6 +35,9 @@ public class RegisterFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static EditText mClassID;
+    private Button mEnrollButton;
+    private GoogleSignInAccount mGoogleSignInAccount;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -58,13 +74,24 @@ public class RegisterFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_register, container, false);
+        View v = inflater.inflate(R.layout.fragment_register, container, false);
+        mClassID = v.findViewById(R.id.classID);
+        mEnrollButton = v.findViewById(R.id.enrollButton);
+        mGoogleSignInAccount = getArguments().getParcelable("profile");
+
+        mEnrollButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                enroll(v);
+            }
+        });
+        return v;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -101,5 +128,42 @@ public class RegisterFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    //ENROLL IN CLASS FUNCTION
+    public void enroll(View view) {
+        //Make Request to Servlet
+        RequestQueue queue = Volley.newRequestQueue(this.getContext());
+        String url ="http://10.10.1.96:8080/FinalProject/Register";
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        //mTextView.setText("Response is: "+ response.substring(0,500));
+                        System.out.println(response);
+                        if(response == "Added") {
+
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //mTextView.setText("That didn't work!");
+                System.out.println("hit an error: " + error.getMessage());
+            }
+        } ) {
+            @Override
+            protected Map<String, String> getParams() {
+                String enrollID = mClassID.getText().toString();
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("studentID", mGoogleSignInAccount.getId());
+                params.put("lectureID", enrollID);
+                return params;
+            }
+        };
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
     }
 }

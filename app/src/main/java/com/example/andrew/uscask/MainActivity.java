@@ -11,6 +11,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -19,6 +25,9 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.sql.DriverManager.println;
 
@@ -30,6 +39,7 @@ public class MainActivity extends AppCompatActivity
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
 
     private GoogleSignInClient mGoogleSignInClient;
+    private GoogleSignInAccount mGoogleSignInAccount;
     private TextView mStatusTextView;
 
     @Override
@@ -49,6 +59,7 @@ public class MainActivity extends AppCompatActivity
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestIdToken(getString(R.string.server_client_id))
                 .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -79,7 +90,42 @@ public class MainActivity extends AppCompatActivity
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            mGoogleSignInAccount = account;
+            //Add User to database
+            RequestQueue queue = Volley.newRequestQueue(this);
+            String url ="http://10.10.1.96:8080/FinalProject/UserLogin";
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            //mTextView.setText("Response is: "+ response.substring(0,500));
+                            System.out.println("Recieved Response");
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            //mTextView.setText("That didn't work!");
+                            System.out.println("hit an error: " + error.getMessage());
+                        }
+                    } ) {
+                        @Override
+                        protected Map<String, String> getParams() {
+                            Map<String, String> params = new HashMap<String, String>();
+                            params.put("requestType", "registerUser");
+                            params.put("userID", mGoogleSignInAccount.getId());
+                            params.put("idToken", mGoogleSignInAccount.getIdToken());
+                            params.put("fullName", mGoogleSignInAccount.getDisplayName());
+                            params.put("lastName", mGoogleSignInAccount.getFamilyName());
+                            params.put("firstName", mGoogleSignInAccount.getGivenName());
+                            params.put("email", mGoogleSignInAccount.getEmail());
+                            params.put("userType", "student");
+                            return params;
+                        }
+                     };
 
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
             updateUI(account);
         } catch (ApiException e) {
             Log.w(TAG, "signInResult:failed code= " + e.getMessage());

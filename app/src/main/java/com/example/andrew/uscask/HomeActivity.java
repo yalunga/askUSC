@@ -37,12 +37,12 @@ import org.w3c.dom.Text;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
+
     private TextView mStatusTextView;
     private DrawerLayout mDrawerLayout;
     private GoogleSignInClient mGoogleSignInClient;
     private GoogleSignInAccount mGoogleSignInAccount;
-    private Location currentLocation;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +70,7 @@ public class HomeActivity extends AppCompatActivity {
         TextView welcomeText = headerView.findViewById(R.id.nav_header_name);
         welcomeText.setText(mGoogleSignInAccount.getGivenName() +"!");
 
+
         //----------SETTING FRAGMENT TO HOME---------------------------//
         Fragment fragment = null;
         Class fragmentClass = HomeFragment.class;
@@ -96,17 +97,19 @@ public class HomeActivity extends AppCompatActivity {
                         Toolbar toolbar = findViewById(R.id.toolbar);
                         if(id == R.id.home){
                             Toast.makeText(HomeActivity.this, "Home",Toast.LENGTH_SHORT).show();
-                            toolbar.setTitle("Home");
+                            TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                            toolbarTitle.setText("Home");
                             fragmentClass = HomeFragment.class;
                         } else if(id == R.id.classroom) {
                             Toast.makeText(HomeActivity.this, "Classroom",Toast.LENGTH_SHORT).show();
-                            toolbar.setTitle("Enter a Classroom");
                             fragmentClass = ClassroomFragment.class;
-                            bundle.putParcelable("location", currentLocation);
+                            TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                            toolbarTitle.setText("Enter Classroom");
                         } else if (id == R.id.register) {
                             Toast.makeText(HomeActivity.this, "Register",Toast.LENGTH_SHORT).show();
                             fragmentClass = RegisterFragment.class;
-                            toolbar.setTitle("Register");
+                            TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                            toolbarTitle.setText("Register");
                         } else if(id == R.id.logout) {
                             mGoogleSignInClient.signOut()
                                     .addOnCompleteListener(HomeActivity.this, new OnCompleteListener<Void>() {
@@ -134,29 +137,6 @@ public class HomeActivity extends AppCompatActivity {
                         return true;
                     }
                 });
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                //makeUseOfNewLocation(location);
-                Toast.makeText(HomeActivity.this, "Hello",Toast.LENGTH_SHORT).show();
-                currentLocation = location;
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
-        try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            //locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
-        } catch(SecurityException e){
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_LOCATION);
-        }
 
 
     }

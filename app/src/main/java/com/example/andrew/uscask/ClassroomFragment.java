@@ -1,24 +1,40 @@
 package com.example.andrew.uscask;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -34,7 +50,13 @@ public class ClassroomFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    public ListView mClassListView;
+    private static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
+    Context mContext;
+    private ListView mClassListView;
+    private Location mLocation;
+    private GoogleSignInAccount mGoogleSignInAccount;
+    private JSONArray mJsonArray;
+    private JSONObject mJsonObject;
 
 
     // TODO: Rename and change types of parameters
@@ -80,17 +102,71 @@ public class ClassroomFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_classroom, container, false);
+        mContext = this.getContext();
         mClassListView = v.findViewById(R.id.classList);
+        mGoogleSignInAccount = getArguments().getParcelable("profile");
         //GET LIST OF CLASSES FROM SERVLET
-        RequestQueue queue = Volley.newRequestQueue(v.getContext());
-        String url ="http://10.0.2.2:8080/FinalProject/Test";
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+        //Make Request to Servlet
+        RequestQueue queue = Volley.newRequestQueue(this.getContext());
+        String url ="http://10.10.1.96:8080/FinalProject/Classes";
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         //mTextView.setText("Response is: "+ response.substring(0,500));
-                        System.out.println("Recieved REsponse");
+                        System.out.println("Response: " + response);
+                        try {
+                            mJsonArray = new JSONArray(response);
+                            if(mJsonArray != null) {
+                                ArrayList<JSONObject> classes = new ArrayList<JSONObject>();
+                                for(int i = 0; i < mJsonArray.length(); i++) {
+                                    try {
+                                        classes.add(mJsonArray.getJSONObject(i));
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                                JsonAdapter adapter = new JsonAdapter(classes, mContext);
+
+                                mClassListView.setAdapter(adapter);
+                                mClassListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                    @Override
+                                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                        JSONObject o = (JSONObject) mClassListView.getItemAtPosition(position);
+                                        //Forward to question activity
+                                        Intent intent = new Intent(getActivity(), QuestionActivity.class);
+                                        Bundle b = new Bundle();
+                                        b.putString("id", "Hello world");
+                                        intent.putExtras(b);
+                                        startActivity(intent);
+                                        if(o != null && mLocation != null) {
+                                            try {
+                                                System.out.println("Class Location: " + o.getString("latitude") + ", " + o.getString("longitude"));
+                                                double classLatitude = Double.parseDouble(o.getString("latitude"));
+                                                double classLongitude = Double.parseDouble(o.getString("longitude"));
+                                                double currentLatitude = mLocation.getLatitude();
+                                                double currentLongitude = mLocation.getLongitude();
+                                                float[] distance = new float[1];
+                                                Location.distanceBetween(classLatitude, classLongitude, currentLatitude, currentLongitude, distance);
+                                                if(distance[0] < 0.1) {
+                                                    System.out.println("Student is inside the classroom");
+                                                }
+                                            } catch(JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        if(response == "Added") {
+
+                        }
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -98,18 +174,46 @@ public class ClassroomFragment extends Fragment {
                 //mTextView.setText("That didn't work!");
                 System.out.println("hit an error: " + error.getMessage());
             }
-        });
+        } ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("studentID", mGoogleSignInAccount.getId());
+                params.put("requestType", "getClasses");
+                return params;
+            }
+        };
 
-// Add the request to the RequestQueue.
+        // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        List values  = new ArrayList();
-        for(int i =1; i <6; i++) {
-            values.add("Class #" + i);
-        }
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(v.getContext(),
-                android.R.layout.simple_list_item_1, values);
-        mClassListView.setAdapter(adapter);
+        //SETTING THE LIST VALUES
 
+
+        //GETTING LOCATION
+
+        LocationManager locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                //makeUseOfNewLocation(location);
+                //Toast.makeText(mContext, "Updated location",Toast.LENGTH_SHORT).show();
+                mLocation = location;
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            //locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
+        } catch(SecurityException e){
+            ActivityCompat.requestPermissions(this.getActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_LOCATION);
+        }
         return v;
     }
 
