@@ -20,7 +20,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/usc_gold"
         android:textSize="18sp"
-        app:fontFamily="sans-serif" />
+        app:fontFamily="@font/open_sans_light" />
 
     <TextView
         android:id="@+id/nav_header_name"
@@ -29,5 +29,6 @@
         android:layout_weight="1"
         android:text="Andrew!"
         android:textColor="@android:color/white"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        app:fontFamily="@font/open_sans_light" />
 </LinearLayout>

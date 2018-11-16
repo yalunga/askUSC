@@ -1,14 +1,20 @@
 package com.example.andrew.uscask;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -38,6 +44,7 @@ public class RegisterFragment extends Fragment {
     private static EditText mClassID;
     private Button mEnrollButton;
     private GoogleSignInAccount mGoogleSignInAccount;
+    private Activity mActivity;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -91,6 +98,8 @@ public class RegisterFragment extends Fragment {
                 enroll(v);
             }
         });
+
+        mActivity = this.getActivity();
         return v;
     }
 
@@ -134,7 +143,7 @@ public class RegisterFragment extends Fragment {
     public void enroll(View view) {
         //Make Request to Servlet
         RequestQueue queue = Volley.newRequestQueue(this.getContext());
-        String url ="http://10.10.1.96:8080/FinalProject/Register";
+        String url ="http://fierce-savannah-23542.herokuapp.com/Classes";
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
@@ -142,8 +151,28 @@ public class RegisterFragment extends Fragment {
                         // Display the first 500 characters of the response string.
                         //mTextView.setText("Response is: "+ response.substring(0,500));
                         System.out.println(response);
-                        if(response == "Added") {
+                        if(response.equals("Added")) {
+                            //Load the Classroom fragment
+                            Fragment fragment = null;
+                            Bundle bundle = new Bundle();
+                            bundle.putParcelable("profile", mGoogleSignInAccount);
+                            try {
+                                fragment = ClassroomFragment.class.newInstance();
+                                fragment.setArguments(bundle);
+                                Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+                                TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                                toolbarTitle.setText("Enter Classroom");
+                                NavigationView navigationView = getActivity().findViewById(R.id.nav_view);
+                                navigationView.getMenu().getItem(1).setChecked(true);
+                            } catch(Exception e){
+                                e.printStackTrace();
+                            }
 
+                            // Insert the fragment by replacing any existing fragment
+                            FragmentManager fragmentManager = getFragmentManager();
+                            fragmentManager.beginTransaction()
+                                    .replace(R.id.flContent, fragment)
+                                    .commit();
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -159,6 +188,7 @@ public class RegisterFragment extends Fragment {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("studentID", mGoogleSignInAccount.getId());
                 params.put("lectureID", enrollID);
+                params.put("requestType", "registerClass");
                 return params;
             }
         };

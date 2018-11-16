@@ -93,14 +93,14 @@ public class MainActivity extends AppCompatActivity
             mGoogleSignInAccount = account;
             //Add User to database
             RequestQueue queue = Volley.newRequestQueue(this);
-            String url ="http://10.10.1.96:8080/FinalProject/UserLogin";
+            String url ="https://fierce-savannah-23542.herokuapp.com/UserLogin";
             StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             // Display the first 500 characters of the response string.
                             //mTextView.setText("Response is: "+ response.substring(0,500));
-                            System.out.println("Recieved Response");
+                            System.out.println("Recieved Response: " + response);
                         }
                     }, new Response.ErrorListener() {
                         @Override

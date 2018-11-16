@@ -5,4 +5,5 @@
     <dimen name="title_center">124dp</dimen>
 
     <dimen name="g_top_margin">100dp</dimen>
+    <dimen name="text_margin">16dp</dimen>
 </resources>

@@ -1,50 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:paddingLeft="10dp"
+    android:paddingTop="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="10dp"
+    android:id="@+id/relativeLayout">
 
 
-    <TextView
-        android:id="@+id/department"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:text="CSCI" />
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-    <TextView
-        android:id="@+id/classNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/department"
-        android:layout_toEndOf="@+id/department"
-        android:text="201" />
+        <TextView
+            android:id="@+id/instructor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/department"
+            android:layout_marginStart="32dp"
+            android:layout_marginLeft="32dp"
+            android:layout_toEndOf="@+id/classNumber"
+            android:layout_toRightOf="@+id/classNumber"
+            android:text="Jeff Miller"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            app:fontFamily="@font/open_sans_light"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.966"
+            app:layout_constraintStart_toEndOf="@+id/classNumber"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/instructor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/department"
-        android:layout_alignStart="@+id/department"
-        android:text="Jeff Miller" />
+        <TextView
+            android:id="@+id/classNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/department"
+            android:layout_toEndOf="@+id/department"
+            android:text="201"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            app:fontFamily="@font/open_sans_light"
+            app:layout_constraintStart_toEndOf="@+id/hyphen"
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <TextView
+            android:id="@+id/hyphen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textColor="@android:color/black"
+            app:fontFamily="@font/open_sans_light"
+            app:layout_constraintEnd_toStartOf="@+id/classNumber"
+            app:layout_constraintStart_toEndOf="@+id/department"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true">
+        <TextView
+            android:id="@+id/department"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:text="CSCI"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            app:fontFamily="@font/open_sans_light"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/description"
-            android:layout_width="wrap_content"
+            android:layout_width="350dp"
             android:layout_height="wrap_content"
-            android:text="Principles of software"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:lines="1"
+            android:text="Principles of Software Delopment"
+            android:textAllCaps="false"
             android:textAppearance="?android:attr/textAppearanceButton"
-            android:textColor="@android:color/black"
-            android:textStyle="bold" />
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            app:fontFamily="@font/open_sans_light"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/department" />
+    </android.support.constraint.ConstraintLayout>
 
-    </LinearLayout>
 
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

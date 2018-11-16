@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -35,7 +36,8 @@ import com.google.android.gms.tasks.Task;
 import org.w3c.dom.Text;
 
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity
+         {
 
 
     private TextView mStatusTextView;
@@ -110,6 +112,11 @@ public class HomeActivity extends AppCompatActivity {
                             fragmentClass = RegisterFragment.class;
                             TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
                             toolbarTitle.setText("Register");
+                        } else if (id == R.id.attendance) {
+                            Toast.makeText(HomeActivity.this, "Attendance",Toast.LENGTH_SHORT).show();
+                            fragmentClass = Attendance.class;
+                            TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                            toolbarTitle.setText("Attendance History");
                         } else if(id == R.id.logout) {
                             mGoogleSignInClient.signOut()
                                     .addOnCompleteListener(HomeActivity.this, new OnCompleteListener<Void>() {
@@ -133,7 +140,7 @@ public class HomeActivity extends AppCompatActivity {
 
                         menuItem.setChecked(true);
 
-
+                        mDrawerLayout.closeDrawers();
                         return true;
                     }
                 });

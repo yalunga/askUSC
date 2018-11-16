@@ -31,7 +31,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +97,32 @@ public class ClassroomFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        mContext = this.getContext();
+        //GETTING LOCATION
+
+        LocationManager locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                //makeUseOfNewLocation(location);
+                //Toast.makeText(mContext, "Updated location",Toast.LENGTH_SHORT).show();
+                mLocation = location;
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            //locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
+        } catch(SecurityException e){
+            ActivityCompat.requestPermissions(this.getActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_LOCATION);
+        }
 
     }
 
@@ -102,13 +131,12 @@ public class ClassroomFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_classroom, container, false);
-        mContext = this.getContext();
         mClassListView = v.findViewById(R.id.classList);
         mGoogleSignInAccount = getArguments().getParcelable("profile");
         //GET LIST OF CLASSES FROM SERVLET
         //Make Request to Servlet
         RequestQueue queue = Volley.newRequestQueue(this.getContext());
-        String url ="http://10.10.1.96:8080/FinalProject/Classes";
+        String url ="https://fierce-savannah-23542.herokuapp.com/Classes";
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
@@ -135,25 +163,44 @@ public class ClassroomFragment extends Fragment {
                                     @Override
                                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                         JSONObject o = (JSONObject) mClassListView.getItemAtPosition(position);
-                                        //Forward to question activity
-                                        Intent intent = new Intent(getActivity(), QuestionActivity.class);
-                                        Bundle b = new Bundle();
-                                        b.putString("id", "Hello world");
-                                        intent.putExtras(b);
-                                        startActivity(intent);
+                                        System.out.println(mLocation);
                                         if(o != null && mLocation != null) {
                                             try {
+                                                SimpleDateFormat parser = new SimpleDateFormat("HH:mm:ss");
+                                                Date date = new Date();
+                                                String currentTimeString = parser.format(date);
+                                                Date currentTimeDate = parser.parse(currentTimeString);
+                                                Date startTime = parser.parse(o.getString("startTime"));
+                                                Date endTime = parser.parse(o.getString("endTime"));
+                                                //Date endTime = parser.parse("10:15:00");
                                                 System.out.println("Class Location: " + o.getString("latitude") + ", " + o.getString("longitude"));
+                                                System.out.println("Class Start Time: " + o.getString("startTime") + " End Time: " + o.getString("endTime"));
+                                                System.out.println("Before Class Ends: " + currentTimeDate.before(endTime) + " After Class Starts: " + currentTimeDate.after(startTime));
                                                 double classLatitude = Double.parseDouble(o.getString("latitude"));
                                                 double classLongitude = Double.parseDouble(o.getString("longitude"));
                                                 double currentLatitude = mLocation.getLatitude();
                                                 double currentLongitude = mLocation.getLongitude();
                                                 float[] distance = new float[1];
                                                 Location.distanceBetween(classLatitude, classLongitude, currentLatitude, currentLongitude, distance);
-                                                if(distance[0] < 0.1) {
-                                                    System.out.println("Student is inside the classroom");
+                                                checkIn(o.getString("id"));
+                                                if(currentTimeDate.after(startTime) && currentTimeDate.before(endTime)) {
+                                                    if (distance[0] < 100) {
+                                                        System.out.println("Student is inside the classroom");
+                                                        //Forward to question activity
+                                                        Intent intent = new Intent(getActivity(), QuestionActivity.class);
+                                                        Bundle b = new Bundle();
+                                                        b.putString("id", "Hello world");
+                                                        intent.putExtras(b);
+                                                        startActivity(intent);
+                                                    } else {
+                                                        Toast.makeText(mContext, "You are not in class.",Toast.LENGTH_SHORT).show();
+                                                    }
+                                                } else {
+                                                    Toast.makeText(mContext, "Class is not in session.",Toast.LENGTH_SHORT).show();
                                                 }
                                             } catch(JSONException e) {
+                                                e.printStackTrace();
+                                            } catch(ParseException e) {
                                                 e.printStackTrace();
                                             }
                                         }
@@ -173,6 +220,7 @@ public class ClassroomFragment extends Fragment {
             public void onErrorResponse(VolleyError error) {
                 //mTextView.setText("That didn't work!");
                 System.out.println("hit an error: " + error.getMessage());
+                error.printStackTrace();
             }
         } ) {
             @Override
@@ -188,32 +236,6 @@ public class ClassroomFragment extends Fragment {
         queue.add(stringRequest);
         //SETTING THE LIST VALUES
 
-
-        //GETTING LOCATION
-
-        LocationManager locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                //makeUseOfNewLocation(location);
-                //Toast.makeText(mContext, "Updated location",Toast.LENGTH_SHORT).show();
-                mLocation = location;
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
-        try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            //locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
-        } catch(SecurityException e){
-            ActivityCompat.requestPermissions(this.getActivity(),
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    MY_PERMISSIONS_REQUEST_LOCATION);
-        }
         return v;
     }
 
@@ -251,5 +273,43 @@ public class ClassroomFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+
+    private void checkIn(String lectureID) {
+        final String id = lectureID;
+        RequestQueue queue = Volley.newRequestQueue(this.getContext());
+        String url ="https://fierce-savannah-23542.herokuapp.com/Attendance";
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        //mTextView.setText("Response is: "+ response.substring(0,500));
+                        System.out.println("Response: " + response);
+
+                        if(response.equals("Success")) {
+                            Toast.makeText(mContext, "You have been checked in.",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //mTextView.setText("That didn't work!");
+                System.out.println("hit an error: " + error.getMessage());
+            }
+        } ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("studentID", mGoogleSignInAccount.getId());
+                params.put("requestType", "checkIn");
+                params.put("lectureID", id);
+                return params;
+            }
+        };
+
+        // Add the request to the RequestQueue.
+        queue.add(stringRequest);
     }
 }
