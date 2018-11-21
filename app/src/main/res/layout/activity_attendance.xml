@@ -34,7 +34,7 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/attendanceList"
         android:layout_width="match_parent"
-        android:layout_height="459dp"
+        android:layout_height="598dp"
         app:layout_constraintTop_toBottomOf="@+id/attendanceToolbar"
         tools:listitem="@layout/recycler_view_item" />
 

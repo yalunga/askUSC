@@ -150,7 +150,7 @@ public class RegisterFragment extends Fragment {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
                         //mTextView.setText("Response is: "+ response.substring(0,500));
-                        System.out.println(response);
+                        System.out.println("register response: " + response);
                         if(response.equals("Added")) {
                             //Load the Classroom fragment
                             Fragment fragment = null;

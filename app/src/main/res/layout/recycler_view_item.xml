@@ -1,26 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/attendanceItem"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp">
+    android:layout_height="wrap_content">
 
-  <ImageView
-      android:id="@+id/attendanceImage"
-      android:layout_width="50dp"
-      android:layout_height="50dp"
-      app:srcCompat="@drawable/ic_check_green_24dp"
-      tools:src="@tools:sample/avatars" />
+  <View
+      android:id="@+id/divider5"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="58dp"
+      android:background="?android:attr/listDivider"
+      app:layout_constraintTop_toTopOf="parent" />
 
   <TextView
       android:id="@+id/attendanceDate"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_gravity="center"
+      android:layout_marginStart="16dp"
+      android:layout_marginLeft="16dp"
+      android:layout_marginEnd="100dp"
+      android:layout_marginRight="100dp"
       android:padding="5dp"
       app:fontFamily="@font/open_sans_light"
+      app:layout_constraintBottom_toBottomOf="@+id/attendanceImage"
+      app:layout_constraintEnd_toStartOf="@+id/attendanceImage"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/attendanceImage"
       tools:text="@tools:sample/lorem" />
-</LinearLayout>
+
+  <ImageView
+      android:id="@+id/attendanceImage"
+      android:layout_width="0dp"
+      android:layout_height="50dp"
+      android:layout_marginTop="16dp"
+      android:layout_marginEnd="164dp"
+      android:layout_marginRight="164dp"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:srcCompat="@drawable/ic_check_green_24dp"
+      tools:src="@tools:sample/avatars" />
+
+</android.support.constraint.ConstraintLayout>

@@ -183,15 +183,25 @@ public class ClassroomFragment extends Fragment {
                                                 float[] distance = new float[1];
                                                 Location.distanceBetween(classLatitude, classLongitude, currentLatitude, currentLongitude, distance);
                                                 checkIn(o.getString("id"));
+                                                //--------------NEEDS TO BE REMOVED-----//
+                                                Intent intent = new Intent(getActivity(), QuestionActivity.class);
+                                                Bundle b = new Bundle();
+                                                b.putString("lectureID", o.getString("id"));
+                                                b.putString("studentID", mGoogleSignInAccount.getId());
+                                                b.putString("lectureName", o.getString("department") + o.getString("classNumber"));
+                                                intent.putExtras(b);
+                                                startActivity(intent);
                                                 if(currentTimeDate.after(startTime) && currentTimeDate.before(endTime)) {
                                                     if (distance[0] < 100) {
                                                         System.out.println("Student is inside the classroom");
                                                         //Forward to question activity
-                                                        Intent intent = new Intent(getActivity(), QuestionActivity.class);
+                                                        /*Intent intent = new Intent(getActivity(), QuestionActivity.class);
                                                         Bundle b = new Bundle();
-                                                        b.putString("id", "Hello world");
+                                                        b.putString("lectureID", o.getString("id"));
+                                                        b.putString("studentID", mGoogleSignInAccount.getId());
+                                                        b.putString("lectureName", o.getString("department") + o.getString("classNumber"));
                                                         intent.putExtras(b);
-                                                        startActivity(intent);
+                                                        startActivity(intent);*/
                                                     } else {
                                                         Toast.makeText(mContext, "You are not in class.",Toast.LENGTH_SHORT).show();
                                                     }
