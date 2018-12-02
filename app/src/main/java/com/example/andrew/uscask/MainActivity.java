@@ -177,6 +177,7 @@ public class MainActivity extends AppCompatActivity
 
             Intent homeIntent = new Intent(this, HomeActivity.class);
             homeIntent.putExtra("profile", account);
+            homeIntent.putExtra("guest", 0);
             MainActivity.this.startActivity(homeIntent);
         } else {
 
@@ -195,5 +196,11 @@ public class MainActivity extends AppCompatActivity
                 break;
 
         }
+    }
+
+    public void guestLogin(View v) {
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.putExtra("guest", 1);
+        MainActivity.this.startActivity(intent);
     }
 }

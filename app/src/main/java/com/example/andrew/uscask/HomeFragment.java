@@ -71,8 +71,13 @@ public class HomeFragment extends Fragment {
         mStatusTextView = v.findViewById(R.id.profilename);
         mProfileImageView = v.findViewById(R.id.profileImage);
         Picasso.get().load("https://www.ocregister.com/wp-content/uploads/2018/03/usc-logo2.jpg?w=560").transform(new CircleTransform()).into(mProfileImageView);
-        System.out.println("Id Token: " + mGoogleSignInAccount.getIdToken());
-        mStatusTextView.setText(getString(R.string.signed_in_fmt, mGoogleSignInAccount.getDisplayName()));
+        if(mGoogleSignInAccount != null) {
+            //System.out.println("Id Token: " + mGoogleSignInAccount.getIdToken());
+            mStatusTextView.setText(mGoogleSignInAccount.getDisplayName());
+        } else {
+            mStatusTextView.setText("Guest");
+        }
+
         return v;
     }
 

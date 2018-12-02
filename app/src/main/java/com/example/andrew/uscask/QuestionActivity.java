@@ -49,6 +49,7 @@ public class QuestionActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    private Boolean alive;
 
     private Gson gson = new Gson();
 
@@ -57,6 +58,7 @@ public class QuestionActivity extends AppCompatActivity {
         @Override
         public void onOpen(WebSocket webSocket, Response response) {
             System.out.println("Connected!");
+            alive = true;
         }
 
         @Override
@@ -78,18 +80,20 @@ public class QuestionActivity extends AppCompatActivity {
                                 //mAdapter.notifyItemRangeChanged(i-1,2);
                                 mAdapter.notifyItemMoved(i, i-1);
                             } else {
-                                mAdapter.notifyItemChanged(i);
+                                //mAdapter.notifyItemChanged(i);
                             }
                         } else {
                             if(i != questionsArray.size()-1 && questionsArray.get(i).getVotes() < questionsArray.get(i+1).getVotes()) {
-                                Message temp = questionsArray.get(i+1);
-                                questionsArray.set(i+1, questionsArray.get(i));
-                                questionsArray.set(i, temp);
-                                mAdapter.notifyItemMoved(i+1, i);
+                                Message temp = questionsArray.get(i);
+                                questionsArray.set(i, questionsArray.get(i+1));
+                                questionsArray.set(i+1, temp);
                                 System.out.println("Swapping: " + gson.toJson(questionsArray.get(i)) + " with " + gson.toJson(questionsArray.get(i+1)));
+                                questionsArray.get(i+1).vote(m.getSender());
                                 System.out.println(questionsArray.get(i+1).getVotes());
+                                mAdapter.notifyItemMoved(i+1, i);
+                                //mAdapter.notifyItemRangeChanged(i,2);
                             } else {
-                                mAdapter.notifyItemChanged(i);
+                                //mAdapter.notifyItemChanged(i);
                             }
                         }
                     }
@@ -104,7 +108,11 @@ public class QuestionActivity extends AppCompatActivity {
 
         @Override
         public void onClosing(WebSocket webSocket, int code, String reason) {
-            webSocket.close(NORMAL_CLOSURE_STATUS, null);
+            if(alive) {
+                startWebSocket();
+            } else {
+                webSocket.close(NORMAL_CLOSURE_STATUS, null);
+            }
 
         }
 
@@ -138,9 +146,11 @@ public class QuestionActivity extends AppCompatActivity {
         client = new OkHttpClient();
 
 
-
-
         mEditText = findViewById(R.id.askText);
+        if(studentID.equals("guest")) {
+            mEditText.setVisibility(View.INVISIBLE);
+        }
+
         mEditText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -163,6 +173,7 @@ public class QuestionActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem  item) {
         if(item.getItemId() == android.R.id.home) {
+            alive = false;
             ws.close(1000, null);
             finish();
         }

@@ -2,6 +2,7 @@ package com.example.andrew.uscask;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -24,8 +25,12 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -45,6 +50,7 @@ public class RegisterFragment extends Fragment {
     private Button mEnrollButton;
     private GoogleSignInAccount mGoogleSignInAccount;
     private Activity mActivity;
+    private int isGuest;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -92,6 +98,7 @@ public class RegisterFragment extends Fragment {
         mClassID = v.findViewById(R.id.classID);
         mEnrollButton = v.findViewById(R.id.enrollButton);
         mGoogleSignInAccount = getArguments().getParcelable("profile");
+        isGuest = getArguments().getInt("guest");
 
         mEnrollButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -143,57 +150,101 @@ public class RegisterFragment extends Fragment {
     public void enroll(View view) {
         //Make Request to Servlet
         RequestQueue queue = Volley.newRequestQueue(this.getContext());
-        String url ="http://fierce-savannah-23542.herokuapp.com/Classes";
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-                        //mTextView.setText("Response is: "+ response.substring(0,500));
-                        System.out.println("register response: " + response);
-                        if(response.equals("Added")) {
-                            //Load the Classroom fragment
-                            Fragment fragment = null;
-                            Bundle bundle = new Bundle();
-                            bundle.putParcelable("profile", mGoogleSignInAccount);
-                            try {
-                                fragment = ClassroomFragment.class.newInstance();
-                                fragment.setArguments(bundle);
-                                Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
-                                TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
-                                toolbarTitle.setText("Enter Classroom");
-                                NavigationView navigationView = getActivity().findViewById(R.id.nav_view);
-                                navigationView.getMenu().getItem(1).setChecked(true);
-                            } catch(Exception e){
-                                e.printStackTrace();
+        if(isGuest != 1) {
+            String url = "http://fierce-savannah-23542.herokuapp.com/Classes";
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            //mTextView.setText("Response is: "+ response.substring(0,500));
+                            System.out.println("register response: " + response);
+                            if (response.equals("Added")) {
+                                //Load the Classroom fragment
+                                Fragment fragment = null;
+                                Bundle bundle = new Bundle();
+                                bundle.putParcelable("profile", mGoogleSignInAccount);
+                                try {
+                                    fragment = ClassroomFragment.class.newInstance();
+                                    fragment.setArguments(bundle);
+                                    Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+                                    TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+                                    toolbarTitle.setText("Enter Classroom");
+                                    NavigationView navigationView = getActivity().findViewById(R.id.nav_view);
+                                    navigationView.getMenu().getItem(1).setChecked(true);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+
+                                // Insert the fragment by replacing any existing fragment
+                                FragmentManager fragmentManager = getFragmentManager();
+                                fragmentManager.beginTransaction()
+                                        .replace(R.id.flContent, fragment)
+                                        .commit();
                             }
-
-                            // Insert the fragment by replacing any existing fragment
-                            FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction()
-                                    .replace(R.id.flContent, fragment)
-                                    .commit();
                         }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //mTextView.setText("That didn't work!");
-                System.out.println("hit an error: " + error.getMessage());
-            }
-        } ) {
-            @Override
-            protected Map<String, String> getParams() {
-                String enrollID = mClassID.getText().toString();
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("studentID", mGoogleSignInAccount.getId());
-                params.put("lectureID", enrollID);
-                params.put("requestType", "registerClass");
-                return params;
-            }
-        };
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    //mTextView.setText("That didn't work!");
+                    System.out.println("hit an error: " + error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() {
+                    String enrollID = mClassID.getText().toString();
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("studentID", mGoogleSignInAccount.getId());
+                    params.put("lectureID", enrollID);
+                    params.put("requestType", "registerClass");
+                    return params;
+                }
+            };
 
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
+        } else {
+            String url = "http://fierce-savannah-23542.herokuapp.com/Guest";
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            //mTextView.setText("Response is: "+ response.substring(0,500));
+                            System.out.println("register response: " + response);
+                           if(response != "" && response != null) {
+                               try {
+                                   JSONObject o = new JSONObject(response);
+                                   Intent intent = new Intent(getContext(), QuestionActivity.class);
+                                   Bundle b = new Bundle();
+                                   b.putString("lectureID", o.getString("id"));
+                                   b.putString("studentID", "guest");
+                                   b.putString("lectureName", o.getString("department") + o.getString("classNumber"));
+                                   intent.putExtras(b);
+                                   startActivity(intent);
+                               } catch (JSONException e) {
+                                   e.printStackTrace();
+                               }
+                           }
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    //mTextView.setText("That didn't work!");
+                    System.out.println("hit an error: " + error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() {
+                    String enrollID = mClassID.getText().toString();
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("lectureID", enrollID);
+                    return params;
+                }
+            };
+
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
+        }
     }
 }

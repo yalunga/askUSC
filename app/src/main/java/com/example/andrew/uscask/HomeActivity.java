@@ -19,6 +19,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -44,6 +45,7 @@ public class HomeActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
     private GoogleSignInClient mGoogleSignInClient;
     private GoogleSignInAccount mGoogleSignInAccount;
+    private Boolean isGuest;
 
 
     @Override
@@ -60,20 +62,38 @@ public class HomeActivity extends AppCompatActivity
        // mStatusTextView = findViewById(R.id.status);
         mDrawerLayout = findViewById(R.id.drawer_layout);
         Intent intent = getIntent();
-        mGoogleSignInAccount = intent.getParcelableExtra("profile");
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-        //----Setting the Nav Header Text to  "Welcome Back {name}" -----------------------//
+        int guest = intent.getIntExtra("guest", 1);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        View headerView = navigationView.getHeaderView(0);
-        TextView welcomeText = headerView.findViewById(R.id.nav_header_name);
-        welcomeText.setText(mGoogleSignInAccount.getGivenName() +"!");
+        if(guest == 1) {
+            isGuest = true;
+            //----Setting the Nav Header Text to  "Welcome Guest" -----------------------//
+            View headerView = navigationView.getHeaderView(0);
+            TextView welcomeText = headerView.findViewById(R.id.nav_header_name);
+            welcomeText.setText("Guest!");
+            //----------disabling menu buttons-------//
+            Menu menuNav=navigationView.getMenu();
+            MenuItem enterClassroom = menuNav.findItem(R.id.classroom);
+            enterClassroom.setEnabled(false);
+            MenuItem attendanceButton = menuNav.findItem(R.id.attendance);
+            attendanceButton.setEnabled(false);
+        } else {
+            isGuest = false;
+            mGoogleSignInAccount = intent.getParcelableExtra("profile");
 
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .build();
+            mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+            //----Setting the Nav Header Text to  "Welcome Back {name}" -----------------------//
+            navigationView = findViewById(R.id.nav_view);
+            View headerView = navigationView.getHeaderView(0);
+            TextView welcomeText = headerView.findViewById(R.id.nav_header_name);
+            welcomeText.setText(mGoogleSignInAccount.getGivenName() +"!");
+        }
 
         //----------SETTING FRAGMENT TO HOME---------------------------//
+        TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
+        toolbarTitle.setText("Profile");
         Fragment fragment = null;
         Class fragmentClass = HomeFragment.class;
         Bundle bundle = new Bundle();
@@ -98,35 +118,39 @@ public class HomeActivity extends AppCompatActivity
                         bundle.putParcelable("profile", mGoogleSignInAccount);
                         Toolbar toolbar = findViewById(R.id.toolbar);
                         if(id == R.id.home){
-                            Toast.makeText(HomeActivity.this, "Home",Toast.LENGTH_SHORT).show();
                             TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
-                            toolbarTitle.setText("Home");
+                            toolbarTitle.setText("Profile");
                             fragmentClass = HomeFragment.class;
                         } else if(id == R.id.classroom) {
-                            Toast.makeText(HomeActivity.this, "Classroom",Toast.LENGTH_SHORT).show();
                             fragmentClass = ClassroomFragment.class;
                             TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
                             toolbarTitle.setText("Enter Classroom");
                         } else if (id == R.id.register) {
-                            Toast.makeText(HomeActivity.this, "Register",Toast.LENGTH_SHORT).show();
                             fragmentClass = RegisterFragment.class;
                             TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
                             toolbarTitle.setText("Register");
+                            if(isGuest) {
+                                bundle.putInt("guest", 1);
+                            }
                         } else if (id == R.id.attendance) {
-                            Toast.makeText(HomeActivity.this, "Attendance",Toast.LENGTH_SHORT).show();
                             fragmentClass = Attendance.class;
                             TextView toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
                             toolbarTitle.setText("Attendance History");
                         } else if(id == R.id.logout) {
-                            mGoogleSignInClient.signOut()
-                                    .addOnCompleteListener(HomeActivity.this, new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            // [START_EXCLUDE]
-                                            logout();
-                                            // [END_EXCLUDE]
-                                        }
-                                    });
+                            if(isGuest) {
+                                Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+                                HomeActivity.this.startActivity(intent);
+                            } else {
+                                mGoogleSignInClient.signOut()
+                                        .addOnCompleteListener(HomeActivity.this, new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                // [START_EXCLUDE]
+                                                logout();
+                                                // [END_EXCLUDE]
+                                            }
+                                        });
+                            }
                         }
                         try {
                             fragment = (Fragment) fragmentClass.newInstance();
@@ -161,4 +185,5 @@ public class HomeActivity extends AppCompatActivity
         Intent mainIntent = new Intent(this, MainActivity.class);
         HomeActivity.this.startActivity(mainIntent);
     }
+
 }

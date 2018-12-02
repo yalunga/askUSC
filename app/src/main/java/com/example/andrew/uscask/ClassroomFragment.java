@@ -39,6 +39,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.SecretKey;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -60,6 +62,8 @@ public class ClassroomFragment extends Fragment {
     private GoogleSignInAccount mGoogleSignInAccount;
     private JSONArray mJsonArray;
     private JSONObject mJsonObject;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
 
 
     // TODO: Rename and change types of parameters
@@ -100,8 +104,8 @@ public class ClassroomFragment extends Fragment {
         mContext = this.getContext();
         //GETTING LOCATION
 
-        LocationManager locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new LocationListener() {
+        locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 //makeUseOfNewLocation(location);
@@ -117,7 +121,7 @@ public class ClassroomFragment extends Fragment {
         };
         try {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            //locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
+            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
         } catch(SecurityException e){
             ActivityCompat.requestPermissions(this.getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -162,6 +166,11 @@ public class ClassroomFragment extends Fragment {
                                 mClassListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                                     @Override
                                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                        try {
+                                            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
+                                        } catch (SecurityException e) {
+                                            e.printStackTrace();
+                                        }
                                         JSONObject o = (JSONObject) mClassListView.getItemAtPosition(position);
                                         System.out.println(mLocation);
                                         if(o != null && mLocation != null) {
@@ -172,7 +181,7 @@ public class ClassroomFragment extends Fragment {
                                                 Date currentTimeDate = parser.parse(currentTimeString);
                                                 Date startTime = parser.parse(o.getString("startTime"));
                                                 Date endTime = parser.parse(o.getString("endTime"));
-                                                //Date endTime = parser.parse("10:15:00");
+                                                //Date endTime = parser.parse("12:15:00");
                                                 System.out.println("Class Location: " + o.getString("latitude") + ", " + o.getString("longitude"));
                                                 System.out.println("Class Start Time: " + o.getString("startTime") + " End Time: " + o.getString("endTime"));
                                                 System.out.println("Before Class Ends: " + currentTimeDate.before(endTime) + " After Class Starts: " + currentTimeDate.after(startTime));
@@ -182,8 +191,6 @@ public class ClassroomFragment extends Fragment {
                                                 double currentLongitude = mLocation.getLongitude();
                                                 float[] distance = new float[1];
                                                 Location.distanceBetween(classLatitude, classLongitude, currentLatitude, currentLongitude, distance);
-                                                checkIn(o.getString("id"));
-                                                //--------------NEEDS TO BE REMOVED-----//
                                                 Intent intent = new Intent(getActivity(), QuestionActivity.class);
                                                 Bundle b = new Bundle();
                                                 b.putString("lectureID", o.getString("id"));
@@ -192,16 +199,12 @@ public class ClassroomFragment extends Fragment {
                                                 intent.putExtras(b);
                                                 startActivity(intent);
                                                 if(currentTimeDate.after(startTime) && currentTimeDate.before(endTime)) {
-                                                    if (distance[0] < 100) {
+                                                    System.out.println(distance[0]);
+                                                    if (distance[0] < 500) {
                                                         System.out.println("Student is inside the classroom");
                                                         //Forward to question activity
-                                                        /*Intent intent = new Intent(getActivity(), QuestionActivity.class);
-                                                        Bundle b = new Bundle();
-                                                        b.putString("lectureID", o.getString("id"));
-                                                        b.putString("studentID", mGoogleSignInAccount.getId());
-                                                        b.putString("lectureName", o.getString("department") + o.getString("classNumber"));
-                                                        intent.putExtras(b);
-                                                        startActivity(intent);*/
+
+                                                        checkIn(o.getString("id"));
                                                     } else {
                                                         Toast.makeText(mContext, "You are not in class.",Toast.LENGTH_SHORT).show();
                                                     }
@@ -213,6 +216,8 @@ public class ClassroomFragment extends Fragment {
                                             } catch(ParseException e) {
                                                 e.printStackTrace();
                                             }
+                                        } else {
+                                            Toast.makeText(mContext, "Can't find location.",Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 });
@@ -221,9 +226,7 @@ public class ClassroomFragment extends Fragment {
                             e.printStackTrace();
                         }
 
-                        if(response == "Added") {
 
-                        }
                     }
                 }, new Response.ErrorListener() {
             @Override
